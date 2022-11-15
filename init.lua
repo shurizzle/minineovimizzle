@@ -242,6 +242,7 @@ local function packer_setup()
       end,
     },
     { 'numToStr/Comment.nvim',
+      keys = '<leader>c/',
       config = function()
           require('Comment').setup({
             mappings = {
