@@ -267,6 +267,7 @@ local function packer_setup()
     },
     -- It doesn't work on Lua5.1
     { 'nvim-telescope/telescope.nvim',
+      cmd = 'Telescope',
       config = function()
         local ts = require('telescope')
 
@@ -282,24 +283,6 @@ local function packer_setup()
             },
           },
         })
-
-        for k, v in pairs({
-          f = { '<cmd>Telescope find_files<CR>', 'Telescope find files' },
-          g = { '<cmd>Telescope live_grep<CR>', 'Telescope live grep' },
-          b = { '<cmd>Telescope buffers<CR>', 'Telescope show buffers' },
-          h = { '<cmd>Telescope help_tags<CR>', 'Telescope help tags' },
-          s = {
-            '<cmd>Telescope lsp_document_symbols<CR>',
-            'Telescope shopw workspace symbols',
-          },
-        }) do
-          vim.keymap.set(
-            'n',
-            '<leader>f' .. k,
-            v[1],
-            { silent = true, noremap = true, desc = v[2] }
-          )
-        end
       end,
       requires = {
         'nvim-lua/plenary.nvim',
@@ -307,6 +290,24 @@ local function packer_setup()
       },
     },
   })
+
+  for k, v in pairs({
+    f = { '<cmd>Telescope find_files<CR>', 'Telescope find files' },
+    g = { '<cmd>Telescope live_grep<CR>', 'Telescope live grep' },
+    b = { '<cmd>Telescope buffers<CR>', 'Telescope show buffers' },
+    h = { '<cmd>Telescope help_tags<CR>', 'Telescope help tags' },
+    s = {
+      '<cmd>Telescope lsp_document_symbols<CR>',
+      'Telescope shopw workspace symbols',
+    },
+  }) do
+    vim.keymap.set(
+      'n',
+      '<leader>f' .. k,
+      v[1],
+      { silent = true, noremap = true, desc = v[2] }
+    )
+  end
 
   -- Sync Packer if it's running for the first time
   if vim.g.packer_bootstrap then
