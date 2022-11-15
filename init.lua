@@ -142,6 +142,8 @@ endfunction
 xnoremap @ :<C-u>call ExecuteMacroOverVisualRange()<CR>
 ]])
 
+vim.cmd('autocmd BufWritePre * :%s/\\s\\+$//e')
+
 for k, v in pairs({
   -- Make Y behave like the other capitals
   Y = { 'y$', 'Yank untill the end of the line' },
