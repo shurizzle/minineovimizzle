@@ -197,7 +197,7 @@ local function packer_setup()
   packer.reset()
   packer.use({
     { 'wbthomason/packer.nvim' },
-    { 'https://github.com/lewis6991/impatient.nvim' },
+    { 'lewis6991/impatient.nvim' },
     { 'ojroques/nvim-osc52',
         config = function()
           if is_ssh() then
