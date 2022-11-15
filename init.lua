@@ -125,6 +125,8 @@ for k, v in pairs({
   ['Y'] = { 'myY`y', 'yank text until the end of the line' },
   -- Paste replace visual selection without copying it
   ['<leader>p'] = { '"_dP', 'Replace visual selection' },
+  -- Replace visual selection without copying it
+  ['<leader>c'] = { '"_c', 'Replace visual selection' },
   -- Search for text in visual selection
   ['*'] = {
     '"zy/\\<\\V<C-r>=escape(@z, \'/\\\')<CR>\\><CR>',
