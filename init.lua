@@ -1,7 +1,11 @@
-_G.path_separator = vim.loop.os_uname().sysname:match('Windows') and '\\' or '/'
+_G.INIT_DIR = vim.fn.fnamemodify(vim.loop.fs_realpath(
+    ({ debug.getinfo(1,"S").source:gsub('^@', '') })[1]
+  ), ':h')
+
+_G.PATH_SEPARATOR = vim.loop.os_uname().sysname:match('Windows') and '\\' or '/'
 
 function _G.join_paths(...)
-  return table.concat({ ... }, _G.path_separator)
+  return table.concat({ ... }, _G.PATH_SEPARATOR)
 end
 
 function _G.has(what)
@@ -34,6 +38,7 @@ function _G.is_ssh()
   _G.is_ssh = loadstring('return ' .. vim.inspect(res))
   return res
 end
+
 
 vim.g.mapleader = ','
 vim.g.maplocalleader = ','
@@ -207,27 +212,29 @@ local function packer_setup()
     },
   })
 
+
   packer.reset()
   packer.use({
     { 'wbthomason/packer.nvim' },
     { 'lewis6991/impatient.nvim' },
     { 'ojroques/nvim-osc52',
         config = function()
-          if is_ssh() then
-            local function copy(lines, _)
-              require('osc52').copy(table.concat(lines, '\n'))
-            end
-
-            local function paste()
-              return { vim.fn.split(vim.fn.getreg(''), '\n'), vim.fn.getregtype('') }
-            end
-
-            vim.g.clipboard = {
-              name = 'osc52',
-              copy = { ['+'] = copy, ['*'] = copy },
-              paste = { ['+'] = paste, ['*'] = paste },
-            }
+          local function copy(lines, _)
+            require('osc52').copy(table.concat(lines, '\n'))
           end
+
+          local function paste()
+            return { vim.fn.split(vim.fn.getreg(''), '\n'), vim.fn.getregtype('') }
+          end
+
+          vim.g.clipboard = {
+            name = 'osc52',
+            copy = { ['+'] = copy, ['*'] = copy },
+            paste = { ['+'] = paste, ['*'] = paste },
+          }
+      end,
+      cond = function()
+        return is_ssh()
       end,
     },
     { 'kylechui/nvim-surround',
