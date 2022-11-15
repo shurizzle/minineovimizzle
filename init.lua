@@ -148,7 +148,7 @@ vim.cmd('autocmd BufWritePre * :%s/\\s\\+$//e')
 
 for k, v in pairs({
   -- Make Y behave like the other capitals
-  Y = { 'y$', 'Yank untill the end of the line' },
+  Y         = { 'y$', 'Yank untill the end of the line' },
   ['<C-h>'] = { '<cmd>wincmd h<CR>' },
   ['<C-j>'] = { '<cmd>wincmd j<CR>' },
   ['<C-k>'] = { '<cmd>wincmd k<CR>' },
@@ -265,6 +265,7 @@ local function packer_setup()
           )
       end,
     },
+    -- It doesn't work on Lua5.1
     { 'nvim-telescope/telescope.nvim',
       config = function()
         local ts = require('telescope')
@@ -285,7 +286,7 @@ local function packer_setup()
         for k, v in pairs({
           f = { '<cmd>Telescope find_files<CR>', 'Telescope find files' },
           g = { '<cmd>Telescope live_grep<CR>', 'Telescope live grep' },
-          b = { '<cmd>Telescope buffer<CR>', 'Telescope show buffers' },
+          b = { '<cmd>Telescope buffers<CR>', 'Telescope show buffers' },
           h = { '<cmd>Telescope help_tags<CR>', 'Telescope help tags' },
           s = {
             '<cmd>Telescope lsp_document_symbols<CR>',
@@ -307,6 +308,7 @@ local function packer_setup()
     },
   })
 
+  -- Sync Packer if it's running for the first time
   if vim.g.packer_bootstrap then
     packer.sync()
   end
