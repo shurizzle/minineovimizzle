@@ -230,7 +230,7 @@ local function packer_setup()
           end
       end,
     },
-    { 'shurizzle/nvim-surround',
+    { 'kylechui/nvim-surround',
       config = function()
           require('nvim-surround.config').default_opts.aliases = {}
           require('nvim-surround').setup()
