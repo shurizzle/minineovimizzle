@@ -77,8 +77,6 @@ end
 
 vim.cmd('colorscheme slate')
 
-local K = vim.keymap.set
-
 for name, key in pairs({
   'Left',
   'Right',
@@ -97,7 +95,7 @@ for name, key in pairs({
   local keymap = function(modes, left, right, options)
     options =
       vim.tbl_extend('force', { noremap = true, silent = true }, options or {})
-    K(modes, left, right, options)
+    vim.keymap.set(modes, left, right, options)
   end
 
   keymap(
@@ -138,7 +136,7 @@ for k, v in pairs({
     'Search for selected text',
   },
 }) do
-  K('v', k, v[1], { silent = true, noremap = true, desc = v[2] })
+  vim.keymap.set('v', k, v[1], { silent = true, noremap = true, desc = v[2] })
 end
 
 vim.cmd([[
@@ -161,7 +159,7 @@ for k, v in pairs({
   ['<C-n>'] = { '<cmd>bnext<CR>' },
   ['<C-p>'] = { '<cmd>bprevious<CR>' },
 }) do
-  K('n', k, v[1], { silent = true, noremap = true, desc = v[2] })
+  vim.keymap.set('n', k, v[1], { silent = true, noremap = true, desc = v[2] })
 end
 
 local function git_clone(url, dir, callback)
