@@ -35,7 +35,8 @@ function _G.is_ssh()
   return res
 end
 
-vim.cmd('colorscheme slate')
+vim.g.mapleader = ','
+vim.g.maplocalleader = ','
 
 vim.opt.number = true
 vim.opt.relativenumber = true
@@ -50,18 +51,26 @@ vim.opt.shiftwidth = 2
 vim.opt.tabstop = 2
 vim.opt.expandtab = true
 vim.opt.clipboard = 'unnamedplus'
-vim.opt.listchars = 'tab: ·,trail:×,nbsp:%,eol:·,extends:»,precedes:«'
+vim.opt.list = true
+vim.opt.listchars = {
+  tab = ' ·',
+  trail = '×',
+  nbsp = '%',
+  eol = '·',
+  extends = '»',
+  precedes = '«',
+}
 vim.opt.laststatus = 3
 vim.opt.shortmess:append('c')
 vim.opt.fillchars:append('eob: ')
 vim.opt.colorcolumn = '80'
 vim.opt.showmode = false
-vim.g.mapleader = ','
-vim.g.maplocalleader = ','
 
 if has('termguicolors') then
   vim.opt.termguicolors = true
 end
+
+vim.cmd('colorscheme slate')
 
 local K = vim.keymap.set
 
