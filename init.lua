@@ -306,15 +306,19 @@ local function packer_setup()
         )
       end,
     },
-    -- It doesn't work on Lua5.1
-    { 'nvim-telescope/telescope.nvim',
-      cmd = 'Telescope',
+    { 'junegunn/fzf',
+      run = function()
+        vim.fn['fzf#install']()
+      end,
+    },
+    { 'junegunn/fzf.vim',
+      after = 'fzf',
       setup = function()
         for k, v in pairs({
-          f = { '<cmd>Telescope find_files<CR>', 'Telescope find files' },
-          g = { '<cmd>Telescope live_grep<CR>', 'Telescope live grep' },
-          b = { '<cmd>Telescope buffers<CR>', 'Telescope show buffers' },
-          h = { '<cmd>Telescope help_tags<CR>', 'Telescope help tags' },
+          f = { '<cmd>Files<CR>', 'fzf find files' },
+          g = { '<cmd>Rg<CR>', 'fzf live grep' },
+          b = { '<cmd>Buffers<CR>', 'fzf show buffers' },
+          h = { '<cmd>Helptags<CR>', 'fzf help tags' },
         }) do
           vim.keymap.set(
             'n',
@@ -323,23 +327,7 @@ local function packer_setup()
             { silent = true, noremap = true, desc = v[2] }
           )
         end
-      end,
-      config = function()
-        local ts = require('telescope')
-
-        ts.setup({
-          defaults = {
-            prompt_prefix = '❯ ',
-            selection_caret = '❯ ',
-            winblend = 20,
-          },
-          extensions = {
-            ['ui-select'] = {
-              require('telescope.themes').get_dropdown(),
-            },
-          },
-        })
-      end,
+      end
     },
   })
 
