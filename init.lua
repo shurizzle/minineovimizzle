@@ -228,6 +228,15 @@ local function packer_setup()
   packer.use({
     { 'wbthomason/packer.nvim' },
     { 'lewis6991/impatient.nvim' },
+    { 'nvim-lua/plenary.nvim',
+      module_pattern = {
+        '^plenary$',
+        '^plenary%.',
+        '^luassert$',
+        '^luassert%.',
+        '^say$',
+      },
+    },
     { 'ojroques/nvim-osc52',
         config = function()
           local function copy(lines, _)
@@ -249,39 +258,52 @@ local function packer_setup()
       end,
     },
     { 'kylechui/nvim-surround',
+      keys = {
+        { 'n', 'ys' },
+        { 'n', 'yss' },
+        { 'n', 'yS' },
+        { 'n', 'ySS' },
+        { 'x', 'S' },
+        { 'x', 'gS' },
+        { 'n', 'ds' },
+        { 'n', 'cs' },
+      },
       config = function()
-          require('nvim-surround.config').default_opts.aliases = {}
-          require('nvim-surround').setup()
+        local opts = require('nvim-surround.config').default_opts
+        opts.keymaps.insert = nil
+        opts.keymaps.insert_line = nil
+        opts.aliases = {}
+        require('nvim-surround').setup()
       end,
     },
     { 'windwp/nvim-autopairs',
       config = function()
-          require('nvim-autopairs').setup()
+        require('nvim-autopairs').setup()
       end,
     },
     { 'numToStr/Comment.nvim',
       keys = '<leader>c/',
       config = function()
-          require('Comment').setup({
-            mappings = {
-              basic = false,
-              extra = false,
-              extended = false,
-            },
-          })
+        require('Comment').setup({
+          mappings = {
+            basic = false,
+            extra = false,
+            extended = false,
+          },
+        })
 
-          vim.keymap.set(
-            'n',
-            '<leader>c/',
-            '<Plug>(comment_toggle_linewise_current)',
-            { silent = true, noremap = true, desc = 'Toggle comments' }
-          )
-          vim.keymap.set(
-            'x',
-            '<leader>c/',
-            '<Plug>(comment_toggle_linewise_visual)',
-            { silent = true, noremap = true, desc = 'Toggle comments' }
-          )
+        vim.keymap.set(
+          'n',
+          '<leader>c/',
+          '<Plug>(comment_toggle_linewise_current)',
+          { silent = true, noremap = true, desc = 'Toggle comments' }
+        )
+        vim.keymap.set(
+          'x',
+          '<leader>c/',
+          '<Plug>(comment_toggle_linewise_visual)',
+          { silent = true, noremap = true, desc = 'Toggle comments' }
+        )
       end,
     },
     -- It doesn't work on Lua5.1
@@ -318,9 +340,6 @@ local function packer_setup()
           },
         })
       end,
-      requires = {
-        'nvim-lua/plenary.nvim',
-      },
     },
   })
 
