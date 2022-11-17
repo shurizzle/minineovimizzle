@@ -131,6 +131,146 @@ for name, key in pairs({
   )
 end
 
+local function buf_needs_deletion(bufnr, wipeout)
+    if wipeout then
+        return vim.api.nvim_buf_is_valid(bufnr)
+    else
+        return vim.api.nvim_buf_is_loaded(bufnr)
+    end
+end
+
+local function buf_kill(range, behaviour, wipeout)
+  if range == nil or range == 0 then
+    range = 0
+  end
+
+  if type(range) == 'number' then
+    range = { range, range }
+  end
+
+  if range[1] == 0 then
+    range[1] = vim.api.nvim_get_current_buf()
+    range[2] = range[1]
+  end
+
+  behaviour = behaviour or 'interactive'
+
+  vim.validate({
+    range = { range, 't' },
+    ['range[1]'] = { range[1], 'n' },
+    ['range[2]'] = { range[2], 'n' },
+    behaviour = { behaviour, function(v)
+      return v == 'interactive' or v == 'force' or v == 'save'
+    end, "valid values are 'interactive', 'force', 'save'" },
+    wipeout = { wipeout, 'b' },
+  })
+
+  -- Target buffers. Stored in a set-like format to quickly check if buffer needs to be deleted.
+  local target_buffers = {}
+  for bufnr=range[1], range[2] do
+    if buf_needs_deletion(bufnr, wipeout) then
+      target_buffers[bufnr] = true
+    end
+  end
+
+  -- If force is disabled, check for modified buffers in range.
+  if behaviour ~= 'force' then
+    for bufnr, _ in pairs(target_buffers) do
+      -- If buffer is modified, prompt user for action.
+      if vim.bo[bufnr].modified then
+        if behaviour == 'interactive' then
+          vim.api.nvim_echo({{
+            string.format(
+              'No write since last change for buffer %d (%s). Would you like to:\n' ..
+              '(s)ave and close\n(i)gnore changes and close\n(c)ancel',
+              bufnr, vim.api.nvim_buf_get_name(bufnr)
+            )
+          }}, false, {})
+
+          local choice = string.char(vim.fn.getchar())
+
+          if choice == 's' or choice == 'S' then  -- Save changes to the buffer.
+            vim.api.nvim_buf_call(bufnr, function() vim.cmd('write') end)
+          elseif choice == 'c' or choice == 'C' then  -- Cancel, remove buffer from targets.
+            target_buffers[bufnr] = nil
+          else
+            vim.api.nvim_err_writeln("Invalid choice")
+            return
+          end
+
+          -- Clear message area.
+          vim.cmd('echo')
+          vim.cmd('redraw')
+        else
+          vim.api.nvim_buf_call(bufnr, function() vim.cmd('update') end)
+        end
+      end
+    end
+  end
+
+  if next(target_buffers) == nil then
+    api.nvim_err_writeln("bufdelete.nvim: No buffers were deleted")
+    return
+  end
+
+  local windows = vim.tbl_filter(
+      function(win)
+          return target_buffers[vim.api.nvim_win_get_buf(win)] ~= nil
+      end,
+      vim.api.nvim_list_wins()
+  )
+
+  local buffers_outside_range = vim.tbl_filter(
+    function(buf)
+      return vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].buflisted
+        and (buf < range[1] or buf > range[2])
+    end,
+    vim.api.nvim_list_bufs()
+  )
+
+  local switch_bufnr
+  if #buffers_outside_range > 0 then
+    local buffer_before_range
+    for _, v in ipairs(buffers_outside_range) do
+      if v < range[1] then
+        buffer_before_range = v
+      end
+      if v > range[2] then
+        switch_bufnr = v
+        break
+      end
+    end
+    if switch_bufnr == nil then
+      switch_bufnr = buffer_before_range
+    end
+  else
+    switch_bufnr = vim.api.nvim_create_buf(true, false)
+
+    if switch_bufnr == 0 then
+      vim.api.nvim_err_writeln("bufdelete.nvim: Failed to create buffer")
+    end
+  end
+
+  for _, win in ipairs(windows) do
+    vim.api.nvim_win_set_buf(win, switch_bufnr)
+  end
+
+  for bufnr, _ in pairs(target_buffers) do
+    if buf_needs_deletion(bufnr, wipeout) then
+      local bang = ''
+      if behaviour == 'force' or vim.bo[bufnr].modified then
+        bang = '!'
+      end
+
+      if wipeout then
+        vim.cmd(bufnr .. 'bwipeout' .. bang)
+      else
+        vim.cmd(bufnr .. 'bdelete' .. bang)
+      end
+    end
+  end
+end
+
 for k, v in pairs({
   -- Reselect visual selection after indenting
   ['<'] = { '<gv', 'Indent back' },
@@ -171,6 +311,14 @@ for k, v in pairs({
   ['<C-l>'] = { '<cmd>wincmd l<CR>' },
   ['<C-n>'] = { '<cmd>bnext<CR>' },
   ['<C-p>'] = { '<cmd>bprevious<CR>' },
+  ZZ        = {
+    function() buf_kill(0, 'save', true) end,
+    'Close current buffer',
+  },
+  ZQ        = {
+    function() buf_kill(0, 'save', true) end,
+    'Close current buffer without saving',
+  },
 }) do
   vim.keymap.set('n', k, v[1], { silent = true, noremap = true, desc = v[2] })
 end
@@ -209,7 +357,7 @@ git_clone(
   end
 )
 
-local function packer_setup()
+;(function ()
   local status_ok, packer = pcall(require, 'packer')
   if not status_ok then
     return
@@ -338,6 +486,4 @@ local function packer_setup()
   if vim.g.packer_bootstrap then
     packer.sync()
   end
-end
-
-packer_setup()
+end)()
