@@ -135,7 +135,7 @@ _G.Mode = {
   end,
 }
 
-vim.cmd('colorscheme slate')
+vim.cmd('colorscheme bluesky')
 
 for name, key in pairs({
   'Left',
