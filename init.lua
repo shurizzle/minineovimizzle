@@ -58,6 +58,7 @@ vim.g.maplocalleader = ','
 
 vim.opt.number = true
 vim.opt.relativenumber = true
+vim.opt.cursorline = true
 vim.opt.autoread = true
 vim.opt.mouse = 'a'
 vim.opt.smartindent = true
@@ -87,6 +88,52 @@ vim.opt.showmode = false
 if has('termguicolors') then
   vim.opt.termguicolors = true
 end
+
+vim.opt.statusline = " %{v:lua.Mode.status()} %f %h%w%m%r%=%{&ft} :%l:%v/%L %P"
+
+_G.Mode = {
+  map = {
+    ['n']      = 'NORMAL',
+    ['no']     = 'O-PENDING',
+    ['nov']    = 'O-PENDING',
+    ['noV']    = 'O-PENDING',
+    ['no\22']  = 'O-PENDING',
+    ['niI']    = 'NORMAL',
+    ['niR']    = 'NORMAL',
+    ['niV']    = 'NORMAL',
+    ['nt']     = 'NORMAL',
+    ['ntT']    = 'NORMAL',
+    ['v']      = 'VISUAL',
+    ['vs']     = 'VISUAL',
+    ['V']      = 'V-LINE',
+    ['Vs']     = 'V-LINE',
+    ['\22']    = 'V-BLOCK',
+    ['\22s']   = 'V-BLOCK',
+    ['s']      = 'SELECT',
+    ['S']      = 'S-LINE',
+    ['\19']    = 'S-BLOCK',
+    ['i']      = 'INSERT',
+    ['ic']     = 'INSERT',
+    ['ix']     = 'INSERT',
+    ['R']      = 'REPLACE',
+    ['Rc']     = 'REPLACE',
+    ['Rx']     = 'REPLACE',
+    ['Rv']     = 'V-REPLACE',
+    ['Rvc']    = 'V-REPLACE',
+    ['Rvx']    = 'V-REPLACE',
+    ['c']      = 'COMMAND',
+    ['cv']     = 'EX',
+    ['ce']     = 'EX',
+    ['r']      = 'REPLACE',
+    ['rm']     = 'MORE',
+    ['r?']     = 'CONFIRM',
+    ['!']      = 'SHELL',
+    ['t']      = 'TERMINAL',
+  },
+  status = function()
+    return _G.Mode.map[vim.fn.mode(1)] or 'NORMAL'
+  end,
+}
 
 vim.cmd('colorscheme slate')
 
