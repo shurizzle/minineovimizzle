@@ -88,7 +88,7 @@ if has('termguicolors') then
   vim.opt.termguicolors = true
 end
 
-vim.opt.statusline = " %{v:lua.Mode.status()} %f %h%w%m%r%=%{&ft} :%l:%v/%L %P"
+vim.opt.statusline = "%{%v:lua.Mode.status()%} %f %h%w%m%r%=%{&ft} :%l:%v/%L %P"
 
 _G.Mode = {
   map = {
@@ -129,10 +129,63 @@ _G.Mode = {
     ['!']      = 'SHELL',
     ['t']      = 'TERMINAL',
   },
+  colors = {
+    ['NORMAL']    = { fg = '#000000', bg = '#ffffff' },
+    ['O-PENDING'] = 'Normal',
+    ['VISUAL']    = { fg = '#000000', bg = '#ffff99' },
+    ['V-LINE']    = 'Visual',
+    ['V-BLOCK']   = 'Visual',
+    ['INSERT']    = { fg = '#000000', bg = '#d7e8d2' },
+    ['REPLACE']   = { fg = '#000000', bg = '#fa979a' },
+    ['V-REPLACE'] = 'Replace',
+    ['SELECT']    = 'Replace',
+    ['S-LINE']    = 'Select',
+    ['S-BLOCK']   = 'Select',
+    ['COMMAND']   = 'Insert',
+    ['EX']        = 'Insert',
+    ['MORE']      = 'Insert',
+    ['CONFIRM']   = 'Replace',
+    ['SHELL']     = 'Replace',
+    ['TERMINAL']  = 'Insert',
+  },
   status = function()
-    return _G.Mode.map[vim.fn.mode(1)] or 'NORMAL'
+    local mode = _G.Mode.map[vim.fn.mode()] or 'NORMAL'
+    return '%#' .. _G.Mode.colors[mode] .. '# ' .. mode .. ' %*'
   end,
 }
+
+;(function()
+  local colors = {}
+
+  for _, key in ipairs(vim.tbl_keys(_G.Mode.colors)) do
+    local v = _G.Mode.colors[key]
+    local k = key:lower():gsub('-', '')
+    k = 'SBM' .. k:sub(1, 1):upper() .. k:sub(2)
+    if type(v) == 'table' then
+      v = vim.tbl_extend('error', v, { bold = true })
+    else
+      v = { link = 'SBM' .. v }
+    end
+    v.default = true
+
+    vim.api.nvim_set_hl(0, k, v)
+    _G.Mode.colors[key] = k
+    colors[k] = v
+  end
+
+  local group = vim.api.nvim_create_augroup(
+    'set_mode_highlight_colors',
+    { clear = true }
+  )
+  vim.api.nvim_create_autocmd({ 'VimEnter', 'ColorScheme' }, {
+    group = group,
+    callback = function()
+      for k, v in pairs(colors) do
+        vim.api.nvim_set_hl(0, k, v)
+      end
+    end,
+  })
+end)()
 
 vim.cmd('colorscheme bluesky')
 
@@ -409,7 +462,7 @@ git_clone(
   end
 )
 
-;(function ()
+;(function()
   local status_ok, packer = pcall(require, 'packer')
   if not status_ok then
     return
