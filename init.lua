@@ -52,7 +52,6 @@ function _G.is_ssh()
   return _G.ssh_remote() ~= nil
 end
 
-
 vim.g.mapleader = ','
 vim.g.maplocalleader = ','
 
@@ -212,7 +211,14 @@ local function buf_kill(range, behaviour, wipeout)
     wipeout = { wipeout, 'b' },
   })
 
-  -- Target buffers. Stored in a set-like format to quickly check if buffer needs to be deleted.
+  local function cmd(str)
+    local ok, err = pcall(vim.api.nvim_command, str)
+    if not ok then
+      vim.api.nvim_echo({ { err, 'ErrorMsg' } }, true, {})
+    end
+    return ok
+  end
+
   local target_buffers = {}
   for bufnr=range[1], range[2] do
     if buf_needs_deletion(bufnr, wipeout) then
@@ -220,10 +226,8 @@ local function buf_kill(range, behaviour, wipeout)
     end
   end
 
-  -- If force is disabled, check for modified buffers in range.
   if behaviour ~= 'force' then
     for bufnr, _ in pairs(target_buffers) do
-      -- If buffer is modified, prompt user for action.
       if vim.bo[bufnr].modified then
         if behaviour == 'interactive' then
           vim.api.nvim_echo({{
@@ -237,7 +241,9 @@ local function buf_kill(range, behaviour, wipeout)
           local choice = string.char(vim.fn.getchar())
 
           if choice == 's' or choice == 'S' then  -- Save changes to the buffer.
-            vim.api.nvim_buf_call(bufnr, function() vim.cmd('write') end)
+            if not vim.api.nvim_buf_call(bufnr, function() return cmd('write') end) then
+              return
+            end
           elseif choice == 'c' or choice == 'C' then  -- Cancel, remove buffer from targets.
             target_buffers[bufnr] = nil
           else
@@ -245,11 +251,12 @@ local function buf_kill(range, behaviour, wipeout)
             return
           end
 
-          -- Clear message area.
-          vim.cmd('echo')
-          vim.cmd('redraw')
+          cmd('echo')
+          cmd('redraw')
         else
-          vim.api.nvim_buf_call(bufnr, function() vim.cmd('update') end)
+          if not vim.api.nvim_buf_call(bufnr, function() return cmd('update') end) then
+            return
+          end
         end
       end
     end
@@ -309,10 +316,8 @@ local function buf_kill(range, behaviour, wipeout)
         bang = '!'
       end
 
-      if wipeout then
-        vim.cmd(bufnr .. 'bwipeout' .. bang)
-      else
-        vim.cmd(bufnr .. 'bdelete' .. bang)
+      if not cmd(bufnr .. (wipeout and 'bwipeout' or 'bdelete') .. bang) then
+        return
       end
     end
   end
@@ -363,7 +368,7 @@ for k, v in pairs({
     'Close current buffer',
   },
   ZQ        = {
-    function() buf_kill(0, 'save', true) end,
+    function() buf_kill(0, 'force', true) end,
     'Close current buffer without saving',
   },
 }) do
