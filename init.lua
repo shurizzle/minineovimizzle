@@ -403,6 +403,11 @@ function! ExecuteMacroOverVisualRange()
   execute ":'<,'>normal @".nr2char(getchar())
 endfunction
 xnoremap @ :<C-u>call ExecuteMacroOverVisualRange()<CR>
+function! SynGroup()
+    let l:s = synID(line('.'), col('.'), 1)
+    echo synIDattr(l:s, 'name') . ' -> ' . synIDattr(synIDtrans(l:s), 'name')
+endfun
+nnoremap gm <cmd>call SynGroup()<CR>
 ]])
 
 vim.cmd('autocmd BufWritePre * :%s/\\s\\+$//e')
