@@ -571,6 +571,7 @@ git_clone(
       run = function()
         vim.fn['fzf#install']()
       end,
+      disable = not not _G.jit,
     },
     { 'junegunn/fzf.vim',
       after = 'fzf',
@@ -588,7 +589,90 @@ git_clone(
             { silent = true, noremap = true, desc = v[2] }
           )
         end
-      end
+      end,
+      disable = not not _G.jit,
+    },
+    { 'nvim-telescope/telescope-fzf-native.nvim',
+      run = 'make',
+      opt = true,
+      disable = not _G.jit,
+    },
+    { 'nvim-telescope/telescope-ui-select.nvim',
+      opt = true,
+      disable = not _G.jit,
+    },
+    { 'nvim-telescope/telescope.nvim',
+      keys = {
+        { 'n', '<leader>ff' },
+        { 'n', '<leader>fg' },
+        { 'n', '<leader>fb' },
+        { 'n', '<leader>fh' },
+        { 'n', '<leader>fs' },
+      },
+      setup = function()
+        if not vim.api.nvim_get_commands({})['Telescope'] then
+          vim.api.nvim_create_user_command('Telescope', function(opts)
+            require('packer.load')({ 'telescope.nvim' }, {
+              cmd = 'Telescope',
+              l1 = opts.line1,
+              l2 = opts.line2,
+              bang = opts.bang and '!' or '',
+              args = opts.args,
+              ---@diagnostic disable-next-line
+            }, _G.packer_plugins)
+          end, {
+            nargs = '*',
+            range = true,
+            bang = true,
+            complete = 'file',
+          })
+        end
+      end,
+      config = function()
+        require('packer.load')({
+          'telescope-fzf-native.nvim',
+          'telescope-ui-select.nvim',
+        }, { module = 'telescope.nvim' }, packer_plugins)
+
+        local ts = require('telescope')
+
+        ts.setup({
+          defaults = {
+            prompt_prefix = '❯ ',
+            selection_caret = '❯ ',
+            winblend = 20,
+          },
+          extensions = {
+            fzf = {
+              fuzzy = true,
+              override_generic_sorter = true,
+              override_file_sorter = true,
+              case_mode = 'smart_case',
+            },
+            ['ui-select'] = {
+              require('telescope.themes').get_dropdown(),
+            },
+          },
+        })
+
+        ts.load_extension('fzf')
+        ts.load_extension('ui-select')
+
+        for k, v in pairs({
+          f = { '<cmd>Telescope find_files<CR>', 'Telescope find files' },
+          g = { '<cmd>Telescope live_grep<CR>', 'Telescope live grep' },
+          b = { '<cmd>Telescope buffers<CR>', 'Telescope show buffers' },
+          h = { '<cmd>Telescope help_tags<CR>', 'Telescope help tags' },
+        }) do
+          vim.keymap.set(
+            'n',
+            '<leader>f' .. k,
+            v[1],
+            { noremap = true, silent = true, desc = v[2] }
+          )
+        end
+      end,
+      disable = not _G.jit,
     },
   })
 
