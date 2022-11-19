@@ -452,11 +452,10 @@ end
 git_clone(
   'https://github.com/lewis6991/impatient.nvim',
   'impatient.nvim',
-  function(_)
-    vim.cmd([[packadd impatient.nvim]])
-    require('impatient')
-  end
+  function(_) vim.cmd([[packadd impatient.nvim]]) end
 )
+
+require('impatient')
 
 git_clone(
   'https://github.com/wbthomason/packer.nvim',
