@@ -1,7 +1,15 @@
-_G.INIT_DIR = vim.fn.fnamemodify(vim.loop.fs_realpath(
-    ({ debug.getinfo(1,"S").source:gsub('^@', '') })[1]
-  ), ':h')
+-- Directory setup {{{
+_G.INIT_DIR = vim.fn.fnamemodify(
+  vim.loop.fs_realpath(({ debug.getinfo(1,"S").source:gsub('^@', '') })[1]),
+  ':h'
+)
 
+if not vim.tbl_contains(vim.opt.rtp:get(), INIT_DIR) then
+  vim.opt.rtp:append(INIT_DIR)
+end
+-- }}}
+
+-- Basic util {{{
 _G.PATH_SEPARATOR = vim.loop.os_uname().sysname:match('Windows') and '\\' or '/'
 
 function _G.join_paths(...)
@@ -51,7 +59,9 @@ end
 function _G.is_ssh()
   return _G.ssh_remote() ~= nil
 end
+-- }}}
 
+-- Options {{{
 vim.g.mapleader = ','
 vim.g.maplocalleader = ','
 
@@ -83,13 +93,17 @@ vim.opt.shortmess:append('c')
 vim.opt.fillchars:append('eob: ')
 vim.opt.colorcolumn = '80'
 vim.opt.showmode = false
+vim.opt.foldmethod = 'marker'
 
 if has('termguicolors') then
   vim.opt.termguicolors = true
 end
+-- }}}
 
+-- Statusline {{{
 vim.opt.statusline = "%{%v:lua.Mode.status()%} %f %h%w%m%r%=%{&ft} :%l:%v/%L %P"
 
+-- Mode {{{
 _G.Mode = {
   map = {
     ['n']      = 'NORMAL',
@@ -154,6 +168,7 @@ _G.Mode = {
   end,
 }
 
+-- Colors setup {{{
 ;(function()
   local colors = {}
 
@@ -186,9 +201,15 @@ _G.Mode = {
     end,
   })
 end)()
+-- }}}
+-- }}}
+-- }}}
 
+-- Colorscheme {{{
 vim.cmd('colorscheme bluesky')
+-- }}}
 
+-- Disable some not-so-vim-like keymaps {{{
 for name, key in pairs({
   'Left',
   'Right',
@@ -229,16 +250,18 @@ for name, key in pairs({
     { noremap = false }
   )
 end
+-- }}}
 
-local function buf_needs_deletion(bufnr, wipeout)
-    if wipeout then
-        return vim.api.nvim_buf_is_valid(bufnr)
-    else
-        return vim.api.nvim_buf_is_loaded(bufnr)
-    end
-end
-
+-- function buf_kill() {{{
 local function buf_kill(range, behaviour, wipeout)
+  local function buf_needs_deletion(bufnr, wipeout)
+      if wipeout then
+          return vim.api.nvim_buf_is_valid(bufnr)
+      else
+          return vim.api.nvim_buf_is_loaded(bufnr)
+      end
+  end
+
   if range == nil or range == 0 then
     range = 0
   end
@@ -375,7 +398,9 @@ local function buf_kill(range, behaviour, wipeout)
     end
   end
 end
+-- }}}
 
+-- Keymaps {{{
 for k, v in pairs({
   -- Reselect visual selection after indenting
   ['<'] = { '<gv', 'Indent back' },
@@ -432,51 +457,57 @@ for k, v in pairs({
 }) do
   vim.keymap.set('n', k, v[1], { silent = true, noremap = true, desc = v[2] })
 end
+-- }}}
 
-local function git_clone(url, dir, callback)
-  local install_path =
-    join_paths(vim.fn.stdpath('data'), 'site', 'pack', 'packer', 'start', dir)
+-- Bootstrap {{{
+;(function()
+  local function git_clone(url, dir, callback)
+    local install_path =
+      join_paths(vim.fn.stdpath('data'), 'site', 'pack', 'packer', 'start', dir)
 
-  if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
-    vim.fn.system({
-      'git',
-      'clone',
-      '--depth',
-      '1',
-      url,
-      install_path,
-    })
-    callback(vim.v.shell_error)
-  end
-end
-
-git_clone(
-  'https://github.com/lewis6991/impatient.nvim',
-  'impatient.nvim',
-  function(res) if res == 0 then vim.cmd([[packadd impatient.nvim]]) end end
-)
-
-xpcall(
-  function() require('impatient') end,
-  function(_)
-    vim.api.nvim_echo(
-      { { 'Error while loading impatient', 'ErrorMsg' } },
-      true, {}
-    )
-  end
-)
-
-git_clone(
-  'https://github.com/wbthomason/packer.nvim',
-  'packer.nvim',
-  function(res)
-    if res == 0 then
-      vim.g.packer_bootstrap = true
-      vim.cmd([[packadd packer.nvim]])
+    if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
+      vim.fn.system({
+        'git',
+        'clone',
+        '--depth',
+        '1',
+        url,
+        install_path,
+      })
+      callback(vim.v.shell_error)
     end
   end
-)
 
+  git_clone(
+    'https://github.com/lewis6991/impatient.nvim',
+    'impatient.nvim',
+    function(res) if res == 0 then vim.cmd([[packadd impatient.nvim]]) end end
+  )
+
+  xpcall(
+    function() require('impatient') end,
+    function(_)
+      vim.api.nvim_echo(
+        { { 'Error while loading impatient', 'ErrorMsg' } },
+        true, {}
+      )
+    end
+  )
+
+  git_clone(
+    'https://github.com/wbthomason/packer.nvim',
+    'packer.nvim',
+    function(res)
+      if res == 0 then
+        vim.g.packer_bootstrap = true
+        vim.cmd([[packadd packer.nvim]])
+      end
+    end
+  )
+end)()
+-- }}}
+
+-- Packer config {{{
 ;(function()
   local status_ok, packer = pcall(require, 'packer')
   if not status_ok then
@@ -691,3 +722,4 @@ git_clone(
     packer.sync()
   end
 end)()
+-- }}}
