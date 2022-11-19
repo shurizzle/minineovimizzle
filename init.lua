@@ -514,14 +514,30 @@ end)()
     return
   end
 
+  local compiled = join_paths(vim.fn.stdpath('data'), 'packer_compiled.lua')
+
+  local after_load = nil
+  local loaded = false
+  local function _after_load()
+    if not loaded then
+      loaded = true
+      if after_load then after_load() end
+    end
+  end
+
+  packer.on_complete = vim.schedule_wrap(function()
+    _after_load()
+    vim.cmd([[doautocmd User PackerComplete]])
+  end)
+
   packer.init({
+    compile_path = compiled,
     display = {
       open_fn = function()
         return require('packer.util').float({ border = 'rounded' })
       end,
     },
   })
-
 
   packer.reset()
   packer.use({
@@ -720,6 +736,9 @@ end)()
   -- Sync Packer if it's running for the first time
   if vim.g.packer_bootstrap then
     packer.sync()
+  elseif vim.loop.fs_stat(compiled) then
+    dofile(compiled)
+    _after_load()
   end
 end)()
 -- }}}
